@@ -1,39 +1,50 @@
 extern crate rand;
 use rand::distributions::{Normal, IndependentSample};
 
+#[macro_use(array)]
+extern crate ndarray;
+use ndarray::{Array1, Array2};
+
 
 #[derive(Debug)]
 struct Network {
-	sizes: Vec<u32>,
-	weights: Vec<Vec<Vec<f64>>>,
-	biases: Vec<Vec<f64>>
+	sizes: Array1<usize>,
+	weights: Array1<Array2<f64>>,
+	biases: Array1<Array1<f64>>
 }
 
 impl Network {
-	fn new(sizes: Vec<u32>) -> Network {
 
-		let mut rng = rand::thread_rng();
+	fn new(sizes: Array1<usize>) -> Network {
+
 		let normal = Normal::new(0.0, 1.0);
 
-		let mut weights: Vec<Vec<Vec<f64>>> = Vec::new();
-		let mut biases: Vec<Vec<f64>> = Vec::new();
 
-		let mut prev_size = sizes[0];
-		for size in &sizes[1..] {
-			let mut layer_biases: Vec<f64> = Vec::new();
-			let mut layer_weights: Vec<Vec<f64>> = Vec::new();
-			for _ in 0..*size {
-				layer_biases.push(normal.ind_sample(&mut rng));
-				let mut neuron_weights: Vec<f64> = Vec::new();
-				for _ in 0..prev_size {
-					neuron_weights.push(normal.ind_sample(&mut rng));
-				}
-				layer_weights.push(neuron_weights);
-			}
-			prev_size = *size;
-			biases.push(layer_biases);
-			weights.push(layer_weights);
-		}
+		let (weights, biases) = {
+
+		let random_bias = |_: usize| -> f64 {
+			return normal.ind_sample(&mut rand::thread_rng())
+		};
+
+		let random_weight = |_: (usize, usize)| -> f64 {
+			return normal.ind_sample(&mut rand::thread_rng())
+		};
+
+
+		let bias_layer = |i: usize| -> Array1<f64> {
+			return Array1::from_shape_fn(sizes[i + 1], &random_bias)
+		};
+
+		let weight_layer = |i: usize| -> Array2<f64> {
+			return Array2::from_shape_fn((sizes[i + 1], sizes[i]), &random_weight)
+		};
+
+		let weights: Array1<Array2<f64>> = Array1::from_shape_fn(sizes.len() - 1, weight_layer);
+		let biases: Array1<Array1<f64>> = Array1::from_shape_fn(sizes.len() - 1, bias_layer);
+
+		(weights, biases)
+		};
+
 		return Network {sizes: sizes,
 						weights: weights,
 						biases: biases}
@@ -41,6 +52,6 @@ impl Network {
 }
 
 fn main() {
-    let net = Network::new(vec![2,3,1]);
+    let net = Network::new(array![2,3,1]);
     println!("My network : {:?}", net);
 }

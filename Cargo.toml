@@ -5,3 +5,4 @@ authors = ["Balthazar Potet <balthazarpotet@gmail.com>"]
 
 [dependencies]
 rand = "0.4"
+ndarray = "0.10.0"
