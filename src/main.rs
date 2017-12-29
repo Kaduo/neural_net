@@ -1,6 +1,5 @@
-extern crate rand;
-use rand::distributions::{Normal, IndependentSample};
-
+extern crate itertools;
+use itertools::zip;
 
 extern crate nalgebra;
 use nalgebra as na;
@@ -34,9 +33,17 @@ impl Network {
 						biases: biases,
 						nb_layers: nb_layers}
 	}
+
+	fn feed_forward(&self, input: &DVector<f64>) -> DVector<f64> {
+		let mut output: DVector<f64> = DVector::from_element(input.nrows(), 0.0);
+		for (w, b) in zip(&self.weights, &self.biases) {
+			output = w*output + b;
+		}
+		return output
+	}
 }
 
 fn main() {
-    let mut net = Network::new(vec![2,3,1]);
-    println!("My network : {:?}", net);
+    let net = Network::new(vec![2,3,1]);
+    println!("My result : {:?}", net.feed_forward(&na::Vector2::new(0.2,0.5)));
 }
