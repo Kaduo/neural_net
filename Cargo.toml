@@ -5,5 +5,4 @@ authors = ["Balthazar Potet <balthazarpotet@gmail.com>"]
 
 [dependencies]
 rand = "0.4"
-ndarray = "0.10.0"
-itertools = "0.7.4"
+nalgebra = "0.13.0"

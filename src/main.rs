@@ -1,73 +1,42 @@
 extern crate rand;
 use rand::distributions::{Normal, IndependentSample};
 
-extern crate itertools;
 
-#[macro_use(array)]
-extern crate ndarray;
-use ndarray::{Array1, Array2, Zip};
-use ndarray::linalg::general_mat_vec_mul;
+extern crate nalgebra;
+use nalgebra as na;
+use na::{DMatrix, DVector};
 
-fn sigmoid(z: f64) -> f64 {
-	return 1.0/(1.0+(-z).exp())
-}
 
 #[derive(Debug)]
 struct Network {
-	sizes: Array1<usize>,
-	weights: Array1<Array2<f64>>,
-	biases: Array1<Array1<f64>>
+	sizes: Vec<usize>,
+	weights: Vec<DMatrix<f64>>,
+	biases: Vec<DVector<f64>>,
+	nb_layers: usize
 }
+
 
 impl Network {
 
-	fn new(sizes: Array1<usize>) -> Network {
+	fn new(sizes: Vec<usize>) -> Network {
 
-		let normal = Normal::new(0.0, 1.0);
+		let nb_layers = sizes.len();
+		let mut weights: Vec<DMatrix<f64>> = Vec::with_capacity(nb_layers - 1);
+		let mut biases: Vec<DVector<f64>> = Vec::with_capacity(nb_layers - 1);
 
-
-		let (weights, biases) = {
-
-		let random_bias = |_i: usize| -> f64 {
-			return normal.ind_sample(&mut rand::thread_rng())
-		};
-
-		let random_weight = |_i: (usize, usize)| -> f64 {
-			return normal.ind_sample(&mut rand::thread_rng())
-		};
-
-
-		let bias_layer = |i: usize| -> Array1<f64> {
-			return Array1::from_shape_fn(sizes[i + 1], &random_bias)
-		};
-
-		let weight_layer = |i: usize| -> Array2<f64> {
-			return Array2::from_shape_fn((sizes[i + 1], sizes[i]), &random_weight)
-		};
-
-		(Array1::from_shape_fn(sizes.len() - 1, weight_layer), Array1::from_shape_fn(sizes.len() - 1, bias_layer))
-
-		};
+		for layer in 1..nb_layers {
+			biases.push(DVector::new_random(sizes[layer]));
+			weights.push(DMatrix::new_random(sizes[layer], sizes[layer - 1]));
+		}
 
 		return Network {sizes: sizes,
 						weights: weights,
-						biases: biases}
-	}
-
-	fn feed_forward(&self, input: &Array1<f64>) -> Array1<f64> {
-		let mut output: Array1<f64> = input.clone();
-		for (b, w) in itertools::zip(&self.biases, &self.weights) {
-			let mut temp: Array1<f64> = Array1::zeros(output.dim());
-			general_mat_vec_mul(1.0, &w, &output, 0.0, &mut temp);
-			output = temp + b;
-		}
-		return output;
+						biases: biases,
+						nb_layers: nb_layers}
 	}
 }
 
 fn main() {
-    let mut net = Network::new(array![2,3,1]);
-    println!("My biases : {:?}", net.biases);
-    Zip::from(&mut net.biases[0]).apply(|x| {*x = sigmoid(*x)});
-    println!("My new biases : {:?}", net.biases);
+    let mut net = Network::new(vec![2,3,1]);
+    println!("My network : {:?}", net);
 }
