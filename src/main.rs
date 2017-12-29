@@ -45,5 +45,5 @@ impl Network {
 
 fn main() {
     let net = Network::new(vec![2,3,1]);
-    println!("My result : {:?}", net.feed_forward(&na::Vector2::new(0.2,0.5)));
+    println!("My result : {:?}", net.feed_forward(&DVector::from_row_slice(2,&[0.2,0.5])));
 }
