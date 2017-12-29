@@ -35,7 +35,7 @@ impl Network {
 	}
 
 	fn feed_forward(&self, input: &DVector<f64>) -> DVector<f64> {
-		let mut output: DVector<f64> = DVector::from_element(input.nrows(), 0.0);
+		let mut output: DVector<f64> = input.clone();
 		for (w, b) in zip(&self.weights, &self.biases) {
 			output = w*output + b;
 		}
