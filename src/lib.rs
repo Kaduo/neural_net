@@ -6,6 +6,10 @@ use nalgebra as na;
 use na::{DMatrix, DVector};
 
 
+fn sigmoid(z: f64) -> f64 {
+	return 1.0/(1.0 + (-z).exp());
+}
+
 #[derive(Debug)]
 pub struct Network {
 	sizes: Vec<usize>,
@@ -13,7 +17,6 @@ pub struct Network {
 	biases: Vec<DVector<f64>>,
 	nb_layers: usize
 }
-
 
 impl Network {
 
@@ -38,7 +41,16 @@ impl Network {
 		let mut output: DVector<f64> = input.clone();
 		for (w, b) in zip(&self.weights, &self.biases) {
 			output = w*output + b;
+			for x in &mut output {
+				*x = sigmoid(*x);
+			}
 		}
 		return output
+	}
+
+	fn SGD(&mut self, training_data: &Vec<(DVector<f64>, DVector<f64>)>,
+			nb_epochs: usize, mini_batch_size: usize, learning_step: f64) {
+
+		unimplemented!();
 	}
 }
