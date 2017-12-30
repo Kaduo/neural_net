@@ -2,12 +2,6 @@ use std::io;
 use std::io::prelude::*;
 use std::fs::File;
 
-
-extern crate serde;
-extern crate serde_json;
-extern crate bincode;
-extern crate rmp_serde;
-
 extern crate neural_net;
 use neural_net::Network;
 
