@@ -8,8 +8,8 @@ extern crate serde_json;
 extern crate bincode;
 extern crate rmp_serde;
 
-extern crate nn;
-use nn::Network;
+extern crate neural_net;
+use neural_net::Network;
 
 extern crate nalgebra;
 use nalgebra as na;
@@ -38,8 +38,10 @@ fn open_mnist_train() -> Vec<(DVector<f64>, DVector<f64>)> {
 	for i in 0..NB_TRAIN_SAMPLES {
 		train_images.read(&mut image).unwrap();
 		train_labels.read(&mut label).unwrap();
-		res.push((DVector::from_row_slice(IMAGE_SIZE, &image.iter().map(|x| *x as f64).collect::<Vec<_>>()[..]),
-					DVector::from_row_slice(LABEL_SIZE, &label.iter().map(|x| *x as f64).collect::<Vec<_>>()[..])));
+		res.push((DVector::from_row_slice(IMAGE_SIZE,
+					&image.iter().map(|x| *x as f64).collect::<Vec<_>>()[..]),
+					DVector::from_row_slice(LABEL_SIZE,
+					&label.iter().map(|x| *x as f64).collect::<Vec<_>>()[..])));
 
 		println!("{:?}", i);
 	}
@@ -49,8 +51,10 @@ fn open_mnist_train() -> Vec<(DVector<f64>, DVector<f64>)> {
 
 fn main() {
 
-	let data: Vec<(DVector<f64>, DVector<f64>)> = 
+	/*let data: Vec<(DVector<f64>, DVector<f64>)> = 
 				bincode::deserialize_from(&mut File::open("resources/train_mnist.bincode").unwrap(),
-					bincode::Infinite).unwrap();
+					bincode::Infinite).unwrap();*/
+
+	let data = open_mnist_train();
 
 }
