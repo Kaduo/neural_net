@@ -8,6 +8,8 @@ extern crate nalgebra;
 use nalgebra as na;
 use na::{DMatrix, DVector};
 
+mod load_mnist;
+
 fn sigmoid(z: f64) -> f64 {
 	return 1.0/(1.0 + (-z).exp());
 }
