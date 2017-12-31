@@ -8,17 +8,12 @@ use nalgebra::DVector;
 fn main() {
 
 	println!("Loading data...");
-	let mut data = load_training_data().unwrap();
+	let (mut train_data, test_data) = load_data().unwrap();
 	println!("Data loaded");
 	println!("Initializing network...");
-	let mut net = Network::new(vec![IMAGE_SIZE, 30, 10]);
+	let mut net = Network::new(vec![IMAGE_SIZE, 100, 10]);
 	println!("Network created");
-	println!("{:?}", net.biases[0]);
-	net.stochastic_gradient_descent(&mut data, 30, 10, 3.0);
+	net.stochastic_gradient_descent(&mut train_data, 30, 10, 3.0);
 	println!("training done");
-	net.evaluate(&data);
-	//println!("{:?}", net.feed_forward(&DVector::from_element(IMAGE_SIZE, 0.0)));
-	//println!("{:?}", net.weights[0]);
-	println!("biases:");
-	println!("{:?}", net.biases[0]);
+	net.evaluate(&test_data);
 }

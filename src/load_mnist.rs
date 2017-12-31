@@ -14,9 +14,11 @@ const TRAINING_IMAGES_PATH: &str  = "resources/train-images.idx3-ubyte";
 const TRAINING_LABELS_PATH: &str  = "resources/train-labels.idx1-ubyte";
 
 
-pub fn load_training_data() -> Result<Vec<(DVector<f64>, DVector<f64>)>, io::Error> {
+pub fn load_data() -> Result<(Vec<(DVector<f64>, DVector<f64>)>,Vec<(DVector<f64>, DVector<f64>)>),
+						io::Error> {
 
-	let mut res: Vec<(DVector<f64>, DVector<f64>)> = Vec::new();
+	let mut train: Vec<(DVector<f64>, DVector<f64>)> = Vec::new();
+	let mut test: Vec<(DVector<f64>, DVector<f64>)> = Vec::new();
 
 	let mut train_images = File::open(TRAINING_IMAGES_PATH)?;
 	let mut train_labels = File::open(TRAINING_LABELS_PATH)?;
@@ -32,10 +34,20 @@ pub fn load_training_data() -> Result<Vec<(DVector<f64>, DVector<f64>)>, io::Err
 		train_labels.read(&mut label)?;
 		let mut temp = DVector::from_element(10, 0.0);
 		temp[label[0] as usize] = 1.0;
-		res.push((DVector::from_row_slice(IMAGE_SIZE,
+		train.push((DVector::from_row_slice(IMAGE_SIZE,
 					&image.iter().map(|x| (*x as f64)/255.0).collect::<Vec<_>>()[..]),
 				temp.clone()));
 	}
 
-	return Ok(res);
+	for _ in 0..NB_TEST_SAMPLES {
+		train_images.read(&mut image)?;
+		train_labels.read(&mut label)?;
+		let mut temp = DVector::from_element(10, 0.0);
+		temp[label[0] as usize] = 1.0;
+		test.push((DVector::from_row_slice(IMAGE_SIZE,
+					&image.iter().map(|x| (*x as f64)/255.0).collect::<Vec<_>>()[..]),
+				temp.clone()));
+	}
+
+	return Ok((train, test));
 }
