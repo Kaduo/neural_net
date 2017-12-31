@@ -33,7 +33,7 @@ pub fn load_training_data() -> Result<Vec<(DVector<f64>, DVector<f64>)>, io::Err
 		let mut temp = DVector::from_element(10, 0.0);
 		temp[label[0] as usize] = 1.0;
 		res.push((DVector::from_row_slice(IMAGE_SIZE,
-					&image.iter().map(|x| *x as f64).collect::<Vec<_>>()[..]),
+					&image.iter().map(|x| (*x as f64)/255.0).collect::<Vec<_>>()[..]),
 				temp.clone()));
 	}
 

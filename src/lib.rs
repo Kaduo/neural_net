@@ -1,5 +1,6 @@
 extern crate rand;
 use rand::{thread_rng, Rng};
+use rand::distributions::{Normal, IndependentSample};
 
 extern crate itertools;
 use itertools::zip;
@@ -27,8 +28,8 @@ fn cost_derivative(output_activations: &DVector<f64>,
 #[derive(Debug)]
 pub struct Network {
 	sizes: Vec<usize>,
-	weights: Vec<DMatrix<f64>>,
-	biases: Vec<DVector<f64>>,
+	pub weights: Vec<DMatrix<f64>>,
+	pub biases: Vec<DVector<f64>>,
 	nb_layers: usize
 }
 
@@ -40,9 +41,23 @@ impl Network {
 		let mut weights: Vec<DMatrix<f64>> = Vec::with_capacity(nb_layers - 1);
 		let mut biases: Vec<DVector<f64>> = Vec::with_capacity(nb_layers - 1);
 
+		let mut rng = thread_rng();
+		let normal = Normal::new(0.0, 1.0);
+
 		for layer in 1..nb_layers {
-			biases.push(DVector::new_random(sizes[layer]));
-			weights.push(DMatrix::new_random(sizes[layer], sizes[layer - 1]));
+			//biases.push(DVector::new_random(sizes[layer]));
+			//weights.push(DMatrix::new_random(sizes[layer], sizes[layer - 1]));
+			let mut bias: DVector<f64> = DVector::zeros(sizes[layer]);
+			for x in &mut bias {
+				*x = normal.ind_sample(&mut rng);
+			}
+			biases.push(bias);
+
+			let mut weight: DMatrix<f64> = DMatrix::zeros(sizes[layer], sizes[layer - 1]);
+			for x in &mut weight {
+				*x = normal.ind_sample(&mut rng);
+			}
+			weights.push(weight)
 		}
 
 		return Network {sizes: sizes,
@@ -51,7 +66,7 @@ impl Network {
 						nb_layers: nb_layers}
 	}
 
-	fn feed_forward(&self, input: &DVector<f64>) -> DVector<f64> {
+	pub fn feed_forward(&self, input: &DVector<f64>) -> DVector<f64> {
 
 		let mut output: DVector<f64> = input.clone();
 		for (w, b) in zip(&self.weights, &self.biases) {
@@ -62,6 +77,29 @@ impl Network {
 		}
 
 		return output
+	}
+
+	pub fn evaluate(&self, test_data: &Vec<(DVector<f64>, DVector<f64>)>) {
+		// MNIST SPECIFIC
+		let mut correct = 0;
+		let total = test_data.len();
+		for &(ref input, ref expected_output) in test_data {
+			let output = self.feed_forward(&input);
+			let mut max = output[0];
+			let mut imax = 0;
+			for (i, x) in zip(0..output.len(), &output) {
+				if *x > max {
+					max = *x;
+					imax = i;
+				}
+			}
+			if expected_output[imax] == 1.0 {
+				correct += 1;
+			}
+
+		}
+
+		println!("{}/{}", correct, total);
 	}
 
 	fn backprop(&self, input: &DVector<f64>, expected_output: &DVector<f64>)
@@ -78,7 +116,7 @@ impl Network {
 		let mut activations: Vec<DVector<f64>> = Vec::with_capacity(self.nb_layers);
 		activations.push(activation.clone());
 
-		let mut z_layers: Vec<DVector<f64>> = Vec::with_capacity(self.nb_layers);
+		let mut z_layers: Vec<DVector<f64>> = Vec::with_capacity(n);
 		for (w, b) in zip(&self.weights, &self.biases) {
 			let z = w*&activation + b;
 			z_layers.push(z.clone());
@@ -93,9 +131,9 @@ impl Network {
 		let mut z_last_prime: DVector<f64> = DVector::from_element(self.sizes[n], 0.0);
 
 		for i in 0..self.sizes[n] {
-			z_last_prime[i] = sigmoid(z_layers[n-1][i]);
+			z_last_prime[i] = sigmoid_prime(z_layers[n-1][i]);
 		}
-		
+
 		let mut delta = cost_derivative(&activations[n], expected_output).component_mul(&z_last_prime);
 
 		nabla_biases[n-1] = Some(delta.clone());
@@ -145,11 +183,9 @@ impl Network {
 			nabla_weights.push(DMatrix::from_element(self.sizes[layer], self.sizes[layer - 1], 0.0));
 		}
 
-		for ref tuple in mini_batch {
+		for &(ref input, ref expected_output) in mini_batch {
 
-			let input = &tuple.0;
-			let expected_output = &tuple.1;
-			let (delta_nabla_b, delta_nabla_w) = self.backprop(&input, &expected_output);
+			let (delta_nabla_b, delta_nabla_w) = self.backprop(input, expected_output);
 
 			for layer in 0..(self.nb_layers - 1) {
 
@@ -159,10 +195,8 @@ impl Network {
 		}
 
 		for layer in 0..(self.nb_layers - 1) {
-
 			let normalized_step = learning_step/(mini_batch.len() as f64);
 			self.biases[layer] = &self.biases[layer] - normalized_step*&nabla_biases[layer];
-
 			self.weights[layer] = &self.weights[layer] - normalized_step*&nabla_weights[layer];
 
 		}
@@ -173,13 +207,13 @@ impl Network {
 									training_data: &mut Vec<(DVector<f64>, DVector<f64>)>,
 									nb_epochs: usize, mini_batch_size: usize, learning_step: f64) {
 
-		println!("Begining stochastic gradient descent");
+		println!("Beginning stochastic gradient descent");
 		let mut rng = thread_rng();
 		let n = training_data.len();
 
-		for _ in 0..nb_epochs {
+		for i in 0..nb_epochs {
 
-			println!("NEW EPOCH :");
+			println!("Epoch {}", i);
 			rng.shuffle(training_data);
 			let mut mini_batches: Vec<&[(DVector<f64>, DVector<f64>)]> = Vec::new();
 
@@ -188,8 +222,6 @@ impl Network {
 				mini_batches.push(&training_data[i..(i + mini_batch_size)]);
 				i += mini_batch_size;
 			}
-
-			println!("MINI BATCHES CREATED !");
 
 			for mini_batch in mini_batches.iter() {
 				self.update_mini_batch(mini_batch, learning_step);
