@@ -5,6 +5,16 @@ use rand::distributions::{Normal, IndependentSample};
 extern crate itertools;
 use itertools::zip;
 
+use std::io;
+use std::io::prelude::*;
+use std::fs::File;
+
+extern crate serde;
+
+ #[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+
 extern crate nalgebra;
 use nalgebra as na;
 use na::{DMatrix, DVector};
@@ -25,7 +35,7 @@ fn cost_derivative(output_activations: &DVector<f64>,
 	return output_activations - expected_output
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Network {
 	sizes: Vec<usize>,
 	pub weights: Vec<DMatrix<f64>>,
@@ -64,6 +74,19 @@ impl Network {
 						weights: weights,
 						biases: biases,
 						nb_layers: nb_layers}
+	}
+
+	pub fn save(&self, path: &str) -> Result<(), io::Error> {
+
+		let mut file = File::create(path)?;
+
+		serde_json::to_writer(&mut file, &self)?;
+		return Ok(());
+	}
+
+	pub fn load(path: &str) -> Result<Network, serde_json::Error> {
+		let file = File::open(path).unwrap();
+		return serde_json::from_reader(file);
 	}
 
 	pub fn feed_forward(&self, input: &DVector<f64>) -> DVector<f64> {
