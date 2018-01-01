@@ -2,9 +2,6 @@ extern crate neural_net;
 use neural_net::Network;
 use neural_net::load_mnist::*;
 
-extern crate nalgebra;
-use nalgebra::DVector;
-
 fn main() {
 
 	println!("Loading data...");

@@ -6,7 +6,6 @@ extern crate itertools;
 use itertools::zip;
 
 use std::io;
-use std::io::prelude::*;
 use std::fs::File;
 
 extern crate serde;
@@ -38,8 +37,8 @@ fn cost_derivative(output_activations: &DVector<f64>,
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Network {
 	sizes: Vec<usize>,
-	pub weights: Vec<DMatrix<f64>>,
-	pub biases: Vec<DVector<f64>>,
+	weights: Vec<DMatrix<f64>>,
+	biases: Vec<DVector<f64>>,
 	nb_layers: usize
 }
 
