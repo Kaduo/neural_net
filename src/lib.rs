@@ -149,14 +149,7 @@ impl Network {
 			activations.push(activation.clone());
 		}
 
-
-		let mut z_last_prime: DVector<f64> = DVector::from_element(self.sizes[n], 0.0);
-
-		for i in 0..self.sizes[n] {
-			z_last_prime[i] = sigmoid_prime(z_layers[n-1][i]);
-		}
-
-		let mut delta = cost_derivative(&activations[n], expected_output).component_mul(&z_last_prime);
+		let mut delta = cost_derivative(&activations[n], expected_output);
 
 		nabla_biases[n-1] = Some(delta.clone());
 		nabla_weights[n-1] = Some(delta.clone() * activations[n-1].transpose());

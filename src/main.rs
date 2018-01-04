@@ -10,7 +10,7 @@ fn main() {
 	println!("Initializing network...");
 	let mut net = Network::new(vec![IMAGE_SIZE, 30, 10]);
 	println!("Network created");
-	net.stochastic_gradient_descent(&mut train_data, 30, 10, 3.0);
+	net.stochastic_gradient_descent(&mut train_data, 30, 10, 0.5);
 	println!("training done");
 	net.evaluate(&test_data);
 	println!("saving...");
